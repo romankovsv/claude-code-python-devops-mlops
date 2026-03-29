@@ -43,14 +43,6 @@
       "args": ["-y", "@playwright/mcp", "--browser", "chrome"],
       "description": "Browser automation and testing via Playwright"
     },
-    "firecrawl": {
-      "command": "npx",
-      "args": ["-y", "firecrawl-mcp"],
-      "env": {
-        "FIRECRAWL_API_KEY": "YOUR_FIRECRAWL_KEY_HERE"
-      },
-      "description": "Web scraping and crawling"
-    },
     "exa-web-search": {
       "command": "npx",
       "args": ["-y", "exa-mcp-server"],
@@ -58,11 +50,85 @@
         "EXA_API_KEY": "YOUR_EXA_API_KEY_HERE"
       },
       "description": "Web search and research via Exa API"
+    },
+
+    "_comment_devops_mlops_start": {
+      "_comment": "=== DevOps / MLOps MCP Servers ==="
+    },
+
+    "aws-docs": {
+      "command": "npx",
+      "args": ["-y", "@awslabs/aws-documentation-mcp-server"],
+      "description": "Official AWS documentation — EKS, SageMaker, IAM, CDK, Boto3, all services. Used by /infra-plan /terraform-review /experiment-review"
+    },
+
+    "kubernetes": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-kubernetes"],
+      "description": "kubectl operations — get pods, logs, describe, apply. Claude can ACTUALLY run kubectl during /k8s-debug instead of just generating commands"
+    },
+
+    "terraform": {
+      "command": "npx",
+      "args": ["-y", "@hashicorp/terraform-mcp-server"],
+      "description": "Terraform Registry — module docs, provider versions, resource schemas. Used by /terraform-review /infra-plan"
+    },
+
+    "prometheus": {
+      "command": "npx",
+      "args": ["-y", "mcp-prometheus"],
+      "env": {
+        "PROMETHEUS_URL": "http://prometheus.monitoring.svc:9090"
+      },
+      "description": "Query Prometheus metrics via PromQL — model latency, error rates, SLO status. Used by /model-health /k8s-debug"
+    },
+
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "postgresql://user:pass@localhost:5432/mlops_db"
+      },
+      "description": "PostgreSQL — MLflow backend store, Feast registry metadata, feature store queries. Used by /experiment-review /feature-review"
+    },
+
+    "aws-s3": {
+      "command": "npx",
+      "args": ["-y", "aws-s3-mcp-server"],
+      "env": {
+        "AWS_REGION": "us-east-1"
+      },
+      "description": "S3 — read model artifacts, DVC cache, Terraform state, data drift reports. Used by /model-registry /retrain /data-validate"
+    },
+
+    "grafana": {
+      "command": "npx",
+      "args": ["-y", "mcp-grafana"],
+      "env": {
+        "GRAFANA_URL": "http://grafana.monitoring.svc:3000",
+        "GRAFANA_API_KEY": "YOUR_GRAFANA_KEY_HERE"
+      },
+      "description": "Grafana — query dashboards, panels, alert states for model/infra health. Used by /model-health /k8s-debug /observability"
+    },
+
+    "jira": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-jira"],
+      "env": {
+        "JIRA_BASE_URL": "https://your-org.atlassian.net",
+        "JIRA_EMAIL": "you@example.com",
+        "JIRA_API_TOKEN": "YOUR_JIRA_TOKEN_HERE"
+      },
+      "description": "Jira — auto-create tickets from /security-scan /cost-check /model-health findings"
     }
   },
   "_comments": {
     "usage": "Copy the servers you need to your ~/.claude.json mcpServers section",
     "env_vars": "Replace YOUR_*_HERE placeholders with actual values",
-    "context_warning": "Keep under 10 MCPs enabled to preserve context window"
+    "context_warning": "Keep under 8-10 MCPs enabled simultaneously to preserve context window",
+    "recommended_python": "github + memory + sequential-thinking + context7 + filesystem",
+    "recommended_devops": "github + aws-docs + kubernetes + terraform + prometheus + filesystem",
+    "recommended_mlops": "github + aws-docs + postgres + aws-s3 + prometheus + grafana",
+    "recommended_full": "Activate per task — see matrix in README MCP section"
   }
 }

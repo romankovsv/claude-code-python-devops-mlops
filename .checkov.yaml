@@ -1,0 +1,15 @@
+framework:
+  - terraform
+  - kubernetes
+  - dockerfile
+  - github_actions
+
+severity: HIGH
+compact: true
+output:
+  - cli
+
+skip-check:
+  # Add project-specific exceptions here with justification:
+  # - CKV_AWS_144  # cross-region replication — not required for this project
+

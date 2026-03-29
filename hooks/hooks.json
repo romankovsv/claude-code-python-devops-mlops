@@ -33,6 +33,52 @@
           }
         ],
         "description": "Warn about print() statements in edited Python files"
+        },
+        {
+          "matcher": "Edit",
+          "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo $CLAUDE_TOOL_INPUT | grep -o '\"file_path\":\\s*\"[^\"]*\"' | head -1 | sed 's/.*\"\\([^\"]*\\)\"/\\1/'); if [ -n \"$file\" ] && echo \"$file\" | grep -q '\\.tf$'; then if command -v terraform >/dev/null 2>&1; then terraform fmt \"$file\" 2>/dev/null && echo \"[terraform] fmt applied to $file\"; fi; fi"
+          }
+        ],
+        "description": "Auto-format Terraform files with terraform fmt after edits"
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo $CLAUDE_TOOL_INPUT | grep -o '\"file_path\":\\s*\"[^\"]*\"' | head -1 | sed 's/.*\"\\([^\"]*\\)\"/\\1/'); if [ -n \"$file\" ] && echo \"$file\" | grep -q '\\.tf$'; then if command -v tflint >/dev/null 2>&1; then tflint --chdir=$(dirname \"$file\") 2>/dev/null | head -20; fi; fi",
+            "async": true,
+            "timeout": 30
+          }
+        ],
+        "description": "Run tflint on Terraform files after edits"
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo $CLAUDE_TOOL_INPUT | grep -o '\"file_path\":\\s*\"[^\"]*\"' | head -1 | sed 's/.*\"\\([^\"]*\\)\"/\\1/'); if [ -n \"$file\" ] && echo \"$file\" | grep -qE '\\.(yaml|yml)$'; then if command -v kubeconform >/dev/null 2>&1; then if grep -q 'apiVersion:' \"$file\" 2>/dev/null; then kubeconform -strict -ignore-missing-schemas -kubernetes-version 1.30.0 \"$file\" 2>/dev/null | head -20; fi; fi; fi",
+            "async": true,
+            "timeout": 15
+          }
+        ],
+        "description": "Validate Kubernetes YAML with kubeconform after edits"
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(echo $CLAUDE_TOOL_INPUT | grep -o '\"file_path\":\\s*\"[^\"]*\"' | head -1 | sed 's/.*\"\\([^\"]*\\)\"/\\1/'); if [ -n \"$file\" ]; then if command -v checkov >/dev/null 2>&1; then if echo \"$file\" | grep -qE '\\.(tf|yaml|yml)$'; then checkov -f \"$file\" --quiet --compact --severity HIGH 2>/dev/null | tail -20; fi; fi; fi",
+            "async": true,
+            "timeout": 30
+          }
+        ],
+        "description": "Run checkov security scan on Terraform and Kubernetes files after edits"
       }
     ],
     "Stop": [
@@ -45,6 +91,26 @@
           }
         ],
         "description": "Check for debug statements in modified Python files"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v gitleaks >/dev/null 2>&1; then gitleaks protect --staged --no-banner 2>/dev/null; exit_code=$?; if [ $exit_code -ne 0 ]; then echo '[SECURITY] gitleaks detected potential secrets in staged files - review before commit'; fi; fi"
+          }
+        ],
+        "description": "Scan staged files for secrets with gitleaks before session end"
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "changed_tf=$(git diff --name-only 2>/dev/null | grep '\\.tf$' || true); if [ -n \"$changed_tf\" ]; then for f in $changed_tf; do terraform fmt -check \"$f\" 2>/dev/null || echo \"[WARNING] terraform fmt needed: $f\"; done; fi"
+          }
+        ],
+        "description": "Check Terraform formatting on session end"
       }
     ]
   }
